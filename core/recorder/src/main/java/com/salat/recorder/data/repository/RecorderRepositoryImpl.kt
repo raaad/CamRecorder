@@ -487,7 +487,10 @@ class RecorderRepositoryImpl(
             if (!recordsRoot.exists() || !recordsRoot.isDirectory) return
 
             val targetFreeBytes = (totalSpace * TARGET_FREE_SPACE_RATIO).toLong()
-            val protectedFiles = controllers.mapNotNullTo(hashSetOf()) { it.getCurrentOutputFileOrNull() }
+            val protectedFiles = controllers.mapNotNull { it.getCurrentOutputFileOrNull() }
+                .flatMapTo(hashSetOf()) { file ->
+                    listOf(file, File(file.parentFile, "${file.name}.idx"))
+                }
             val groups = recordsRoot.listSegmentGroupsOrdered(protectedFiles)
             if (groups.isEmpty()) return
 

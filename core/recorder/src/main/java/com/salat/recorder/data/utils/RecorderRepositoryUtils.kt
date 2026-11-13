@@ -13,6 +13,13 @@ import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 
+private val CURRENT_SEGMENT_FILE_NAME = Regex(
+    "^(\\d{2}-\\d{2}-\\d{2}_\\d{2}\\.\\d{2}\\.\\d{2})_\\d+_\\d+_[A-Za-z]+$",
+)
+private val LEGACY_SEGMENT_FILE_NAME = Regex(
+    "^(\\d{2}\\.\\d{2}\\.\\d{2}_\\d{2}-\\d{2}-\\d{2})_[A-Za-z]+$",
+)
+
 internal fun alignSizeDown(size: Size, widthAlignment: Int, heightAlignment: Int): Size? {
     val alignedWidth = alignDown(size.width, widthAlignment)
     val alignedHeight = alignDown(size.height, heightAlignment)
@@ -31,18 +38,9 @@ internal fun MediaCodecInfo.supportsSurfaceInput(mimeType: String): Boolean {
 }
 
 internal fun File.segmentGroupKeyOrNull(): String? {
-    val fileName = name.substringBeforeLast('.')
-    return when {
-        fileName.matches(Regex("\\d{2}-\\d{2}-\\d{2}_\\d{2}\\.\\d{2}\\.\\d{2}_[A-Za-z]+")) -> {
-            fileName.substringBeforeLast('_')
-        }
-
-        fileName.matches(Regex("\\d{2}\\.\\d{2}\\.\\d{2}_\\d{2}-\\d{2}-\\d{2}_[A-Za-z]+")) -> {
-            fileName.substringBeforeLast('_')
-        }
-
-        else -> null
-    }
+    val fileName = name.removeSuffix(".idx").substringBeforeLast('.')
+    return CURRENT_SEGMENT_FILE_NAME.matchEntire(fileName)?.groupValues?.get(1)
+        ?: LEGACY_SEGMENT_FILE_NAME.matchEntire(fileName)?.groupValues?.get(1)
 }
 
 internal fun File.deleteEmptyDirectoriesUpwards(stopAt: File) {

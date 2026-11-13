@@ -111,6 +111,17 @@ The project supports external signing configuration:
 
 > Debug/internal builds use a dummy signing config by default.
 
+### GitHub Actions release APK
+
+The `Build release APK` workflow runs on pushes to `main` and can also be started manually. Configure these repository **Actions secrets** first:
+
+- `RELEASE_KEYSTORE_BASE64` — your release keystore encoded as Base64.
+- `RELEASE_KEYSTORE_PASSWORD` — keystore password.
+- `RELEASE_KEY_ALIAS` — alias of the signing key.
+- `RELEASE_KEY_PASSWORD` — signing key password.
+
+The workflow builds `:app:assembleRelease` and uploads the signed APK as the `CamRecorder-release` artifact. Keep the keystore and its passwords private, and retain the same key for future app updates.
+
 ## Navigation and UI Flow
 
 - `MainActivity` initializes Compose content and `NavHost`.
